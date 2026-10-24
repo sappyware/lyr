@@ -12,5 +12,6 @@ cd lyr
 ```bash
 chmod +x install.sh
 ```
-```./install.sh
+```bash
+./install.sh
 ```
