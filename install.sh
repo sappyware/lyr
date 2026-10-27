@@ -13,6 +13,36 @@ fi
 VENV_DIR="${LYR_VENV:-${XDG_DATA_HOME:-$HOME/.local/share}/lyr/venv}"
 PY="${LYR_PYTHON:-python3}"
 
+install_alias() {
+    local rc="$HOME/.bashrc"
+    local begin="# >>> lyr launcher >>>"
+    local end="# <<< lyr launcher <<<"
+
+    [[ -f "$rc" ]] || : > "$rc"
+
+    if grep -qF "$begin" "$rc" 2>/dev/null; then
+        local tmp
+        tmp="$(mktemp)"
+        awk -v b="$begin" -v e="$end" -v s="$SELF" '
+            $0 == b { blk=1; print b; printf("lyr() { \"%s\" \"$@\"; }\n", s); next }
+            $0 == e { blk=0; print e; next }
+            !blk    { print }
+        ' "$rc" > "$tmp"
+        mv "$tmp" "$rc"
+        return 0
+    fi
+
+    {
+        printf '\n%s\n' "$begin"
+        printf 'lyr() { "%s" "$@"; }\n' "$SELF"
+        printf '%s\n' "$end"
+    } >> "$rc"
+
+    echo "lyr-launcher: added 'lyr' function to $rc (run 'source ~/.bashrc')." >&2
+}
+
+install_alias
+
 if ! command -v "$PY" >/dev/null 2>&1; then
     echo "lyr-launcher: $PY not found. Install Python 3.11+." >&2
     exit 1
